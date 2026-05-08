@@ -1,0 +1,3 @@
+
+class PlatformLibrary:
+    pass
