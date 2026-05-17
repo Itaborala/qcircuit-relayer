@@ -42,17 +42,17 @@ class AerEngine(ExecutionEngine):
             "simulator": True,
         }
 
-    def submit(self, circuit, type: JobType, **kwargs):
-        if type == JobType.SAMPLER:
+    def submit(self, circuit, job_type: JobType, **kwargs):
+        if job_type == JobType.SAMPLER:
             sampler = SamplerV2.from_backend(self._backend)
             primitive_job = sampler.run([circuit], **kwargs)
-        elif type == JobType.ESTIMATOR:
+        elif job_type == JobType.ESTIMATOR:
             observables = kwargs.pop("observables")
             estimator = EstimatorV2.from_backend(self._backend)
             primitive_job = estimator.run([(circuit, observables)], **kwargs)
         else:
             raise ValueError(f"Unsupported JobType: {type}")
-        return AerJob(primitive_job, type)
+        return AerJob(primitive_job, job_type)
     
 
 class AerJob(ExecutionJob):
