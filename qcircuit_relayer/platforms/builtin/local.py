@@ -1,7 +1,7 @@
 # qcircuit_relayer/platforms/builtin/aer.py
 
 import uuid
-from qiskit_aer import AerProvider
+from qiskit_aer import AerProvider, AerSimulator
 from qiskit_aer.primitives import SamplerV2, EstimatorV2
 
 from qcircuit_relayer.core.interfaces import (
@@ -22,7 +22,8 @@ class AerPlatform(QuantumPlatform):
         return self._provider.backends()
 
     def get_backend(self, name="aer_simulator"):
-        return self._provider.get_backend(name)
+        return AerSimulator(method='extended_stabilizer')
+        #return self._provider.get_backend(name)
 
     def engine(self, backend, mode="default"):
         return AerEngine(backend)
@@ -43,15 +44,17 @@ class AerEngine(ExecutionEngine):
         }
 
     def submit(self, circuit, job_type: JobType, **kwargs):
+        pubs = circuit if isinstance(circuit, (list, tuple)) else [circuit]
         if job_type == JobType.SAMPLER:
             sampler = SamplerV2.from_backend(self._backend)
-            primitive_job = sampler.run([circuit], **kwargs)
+            primitive_job = sampler.run(pubs, **kwargs)
         elif job_type == JobType.ESTIMATOR:
             observables = kwargs.pop("observables")
             estimator = EstimatorV2.from_backend(self._backend)
-            primitive_job = estimator.run([(circuit, observables)], **kwargs)
+            pub_list = [(c, observables) for c in pubs]
+            primitive_job = estimator.run(pub_list, **kwargs)
         else:
-            raise ValueError(f"Unsupported JobType: {type}")
+            raise ValueError(f"Unsupported JobType: {job_type}")
         return AerJob(primitive_job, job_type)
     
 
