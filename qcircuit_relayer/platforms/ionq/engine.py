@@ -32,7 +32,7 @@ class IonQEngine(ExecutionEngine):
     def submit(self, circuit, job_type: JobType, **kwargs):
         circs = circuit if isinstance(circuit, list) else [circuit]
         if job_type != JobType.SAMPLER:
-            raise ValueError(f"IonQ is sampler-only; got {type}")
+            raise ValueError(f"IonQ is sampler-only; got {job_type}")
 
         is_sim = "simulator" in self._backend.name
         noise_model = kwargs.pop("noise_model", None)
@@ -52,8 +52,11 @@ class IonQEngine(ExecutionEngine):
             for c in circs:
                 if c.num_qubits > limit:
                     raise ValueError(
-                        f"Circuit uses {circuit.num_qubits} qubits; "
+                        f"Circuit uses {c.num_qubits} qubits; "
                         f"simulator limit with noise_model={noise_model or 'ideal'!r} is {limit}"
                     )
 
         return IonQJob(self._backend.run(circs, **kwargs))
+
+    def retrieve(self, job_id: str)-> IonQJob:
+        return IonQJob(self._backend.retrieve_job(job_id))

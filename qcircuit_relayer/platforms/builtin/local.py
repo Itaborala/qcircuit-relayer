@@ -22,7 +22,8 @@ class AerPlatform(QuantumPlatform):
         return self._provider.backends()
 
     def get_backend(self, name="aer_simulator"):
-        return AerSimulator(method='extended_stabilizer')
+        method = name if name and name != "aer_simulator" else 'automatic'
+        return AerSimulator(method=method)
         #return self._provider.get_backend(name)
 
     def engine(self, backend, mode="default"):
@@ -57,12 +58,16 @@ class AerEngine(ExecutionEngine):
             raise ValueError(f"Unsupported JobType: {job_type}")
         return AerJob(primitive_job, job_type)
     
+    def retrieve(self, job_id: str):
+        raise NotImplementedError("Retrieval by ID is not supported in AerEngine, which is designed for synchronous execution.")
+    
 
 class AerJob(ExecutionJob):
     def __init__(self, primitive_job, job_type: JobType):
         self._job = primitive_job
         self._type = job_type
         self._id = str(uuid.uuid4())
+        self._cached = None
 
     @property
     def id(self):
@@ -77,7 +82,14 @@ class AerJob(ExecutionJob):
         return self._type
 
     def result(self, timeout=None):
-        return self._job.result()
+        if self._cached is None:
+            self._cached = self._job.result()
+        return self._cached
+
+    def memory(self, pub_index: int = 0)-> list[str]:
+        if self._type != JobType.SAMPLER:
+            raise ValueError("Memory is only available for sampler jobs.")
+        return list(self.result()[pub_index].data.meas.get_bitstrings())
 
 
     def cancel(self):

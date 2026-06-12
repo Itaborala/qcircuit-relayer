@@ -31,6 +31,10 @@ class ExecutionJob(ABC):
     def result(self)-> Any:
         ...
 
+    @abstractmethod
+    def memory(self) -> Any:
+        ...
+
 
     @abstractmethod
     def cancel(self):
@@ -47,6 +51,10 @@ class ExecutionEngine(ABC):
 
     @abstractmethod
     def capabilities(self) -> dict:
+        ...
+
+    @abstractmethod
+    def retrieve(self, job_id: str) -> ExecutionJob:
         ...
 
 class QuantumPlatform(ABC):
