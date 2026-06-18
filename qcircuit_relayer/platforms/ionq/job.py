@@ -39,8 +39,8 @@ class IonQJob(ExecutionJob):
         random.shuffle(mem)
         print(mem)
         return mem
-        mem = self._result().get_memory(pub_index)
-        return [str(bitstring) for bitstring in mem]
+        # mem = self._result().get_memory(pub_index)
+        # return [str(bitstring) for bitstring in mem]
 
     def cancel(self):
         return self._job.cancel()
